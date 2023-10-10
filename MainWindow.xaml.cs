@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using Octokit;
+using Application = System.Windows.Application;
 using FileMode = System.IO.FileMode;
 
 namespace AutobotUpdater
@@ -104,18 +105,21 @@ namespace AutobotUpdater
 
         private void Install()
         {
-            Dispatcher.Invoke(() => { DownloadStatus.Text = "Installing Update."; });
+            Dispatcher.Invoke(() => { DownloadStatus.Text = "Extracting Update."; });
 
             try
             {
-                ZipFile.ExtractToDirectory("Autobot.zip", $"{DirectoryPath!}/temp", true);
+                ZipFile.ExtractToDirectory("Autobot.zip", "temp");
+                
+                Thread.Sleep(1000);
 
                 Dispatcher.Invoke(() =>
                 {
+                    DownloadStatus.Text = "Copying Update.";
+                    
                     var copyStartInfo = new ProcessStartInfo
                     {
                         FileName = "cmd.exe",
-                        RedirectStandardOutput = false,
                         RedirectStandardInput = true,
                         UseShellExecute = false,
                         CreateNoWindow = true
@@ -124,8 +128,24 @@ namespace AutobotUpdater
                     var copyProcess = new Process { StartInfo = copyStartInfo };
 
                     copyProcess.Start();
-                    copyProcess.StandardInput.WriteLine(@"for /r . %a in (*) do copy /b/v/y %a ..");
-                    copyProcess.StandardInput.WriteLine("exit");
+                    copyProcess.StandardInput.WriteLine(@"
+                        @echo off
+                        setlocal
+
+                        set ""sourceFolder=%CD%\temp""
+                        set ""destinationFolder=%CD%""
+
+                        echo ""%sourceFolder%""
+                        echo ""%destinationFolder%""
+
+                        xcopy ""%sourceFolder%"" ""%destinationFolder%"" /E /I /Y
+
+                        rmdir /s /q ""%sourceFolder%""
+
+                        endlocal
+
+                        exit
+                    ");
                     copyProcess.WaitForExit();
                     
                     DownloadStatus.Text = "Installation Complete.";
@@ -141,7 +161,7 @@ namespace AutobotUpdater
 
                     Process.Start(startInfo);
 
-                    Environment.Exit(0);
+                    Application.Current.Shutdown();
                 });
             }
             catch (Exception ex)
