@@ -1,0 +1,44 @@
+﻿<Window x:Class="AutobotUpdater.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:components="clr-namespace:AutobotUpdater.Components"
+        mc:Ignorable="d"
+        WindowStyle="None"
+        WindowStartupLocation="CenterScreen"
+        AllowsTransparency="True"
+        Title="AutobotUpdater"
+        Width="400"
+        Background="Transparent"
+        BorderThickness="0"
+        SizeToContent="Height">
+    <Border Padding="10">
+        <Border.Effect>
+            <DropShadowEffect Color="Black" Opacity="0.1" BlurRadius="10" ShadowDepth="5" />
+        </Border.Effect>
+
+        <Border CornerRadius="10" BorderBrush="#404040" BorderThickness="1" Background="#171717">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="30" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <components:Titlebar Grid.Row="0" />
+
+                <Border Grid.Row="1" Padding="10">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="30"/>
+                            <RowDefinition Height="10"/>
+                        </Grid.RowDefinitions>
+                        
+                        <TextBlock x:Name="DownloadStatus" Grid.Row="0" Foreground="#FFFFFFFF" HorizontalAlignment="Center" Text="Downloading Update"/>
+                        <ProgressBar x:Name="DownloadProgressBar" Grid.Row="1" Style="{StaticResource AutobotProgressbar}" Foreground="#FFFFFFFF" Value="10" Background="#FF1C1C1C"/>
+                    </Grid>
+                </Border>
+            </Grid>
+        </Border>
+    </Border>
+</Window>

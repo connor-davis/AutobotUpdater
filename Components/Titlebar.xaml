@@ -1,0 +1,15 @@
+﻿<UserControl x:Class="AutobotUpdater.Components.Titlebar"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d"
+             d:DesignHeight="30" d:DesignWidth="400">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        
+        <Label x:Name="DragArea" Padding="10 0 0 0" MouseDown="DragArea_OnMouseDown" Grid.Column="0" VerticalAlignment="Center" Content="Autobot Updater" Foreground="#FFFFFFFF" />
+    </Grid>
+</UserControl>
