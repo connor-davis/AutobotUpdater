@@ -143,9 +143,8 @@ namespace AutobotUpdater
                         rmdir /s /q ""%sourceFolder%""
 
                         endlocal
-
-                        exit
                     ");
+                    copyProcess.StandardInput.WriteLine("exit");
                     copyProcess.WaitForExit();
                     
                     DownloadStatus.Text = "Installation Complete.";
