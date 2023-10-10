@@ -22,8 +22,6 @@ namespace AutobotUpdater
         private static readonly string? DirectoryPath =
             Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
 
-        private readonly string _applicationPath = $"{DirectoryPath}/Autobot.exe";
-
         public MainWindow()
         {
             InitializeComponent();
