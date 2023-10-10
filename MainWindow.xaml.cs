@@ -121,7 +121,7 @@ namespace AutobotUpdater
                     {
                         FileName = "cmd.exe",
                         RedirectStandardInput = true,
-                        UseShellExecute = false,
+                        UseShellExecute = true,
                         CreateNoWindow = true
                     };
 
@@ -154,13 +154,13 @@ namespace AutobotUpdater
                     var startInfo = new ProcessStartInfo
                     {
                         FileName = "Autobot.exe",
-                        UseShellExecute = false,
+                        UseShellExecute = true,
                         CreateNoWindow = true
                     };
 
                     Process.Start(startInfo);
 
-                    Application.Current.Shutdown();
+                    Environment.Exit(0);
                 });
             }
             catch (Exception ex)
