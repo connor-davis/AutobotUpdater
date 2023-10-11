@@ -121,7 +121,7 @@ namespace AutobotUpdater
                     {
                         FileName = "cmd.exe",
                         RedirectStandardInput = true,
-                        UseShellExecute = true,
+                        UseShellExecute = false,
                         CreateNoWindow = true
                     };
 
