@@ -3,12 +3,10 @@ using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Net.Http;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using Octokit;
-using Application = System.Windows.Application;
 using FileMode = System.IO.FileMode;
 
 namespace AutobotUpdater
@@ -19,9 +17,6 @@ namespace AutobotUpdater
     public partial class MainWindow
     {
         private static MainWindow? _instance;
-
-        private static readonly string? DirectoryPath =
-            Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
 
         public MainWindow()
         {
@@ -110,7 +105,7 @@ namespace AutobotUpdater
             try
             {
                 ZipFile.ExtractToDirectory("Autobot.zip", "temp", true);
-                
+
                 Thread.Sleep(1000);
 
                 Dispatcher.Invoke(() =>
@@ -119,23 +114,35 @@ namespace AutobotUpdater
 
                     if (CopyUpdate($"./temp", $"."))
                     {
-                        if (Directory.Exists("./temp")) Directory.Delete("./temp");
-                        
-                        DownloadStatus.Text = "Installation Complete.";
-
-                        Thread.Sleep(1000);
-
-                        var startInfo = new ProcessStartInfo
+                        if (DeleteUpdate("./temp"))
                         {
-                            FileName = "Autobot.exe",
-                            UseShellExecute = true,
-                            CreateNoWindow = true
-                        };
+                            if (File.Exists("./Autobotv4.zip")) File.Delete("./Autobotv4.zip");
 
-                        Process.Start(startInfo);
+                            DownloadStatus.Text = "Installation Complete.";
 
-                        Environment.Exit(0);
-                    } else
+                            Thread.Sleep(1000);
+
+                            var startInfo = new ProcessStartInfo
+                            {
+                                FileName = "Autobot.exe",
+                                UseShellExecute = true,
+                                CreateNoWindow = true
+                            };
+
+                            Process.Start(startInfo);
+
+                            Environment.Exit(0);
+                        }
+                        else
+                        {
+                            DownloadStatus.Text = "Update Failed. Could not clean up update.";
+
+                            Thread.Sleep(2000);
+
+                            Environment.Exit(0);
+                        }
+                    }
+                    else
                     {
                         DownloadStatus.Text = "Update Failed. Could not copy update.";
 
@@ -153,37 +160,63 @@ namespace AutobotUpdater
                     DownloadStatus.Text = ex.Message;
                     DownloadProgressBar.Visibility = Visibility.Collapsed;
                 });
-                
+
                 Console.WriteLine($"Error: {ex.Message}");
             }
         }
 
-        private bool CopyUpdate(string sourceDir, string targetDir)
+        private static bool CopyUpdate(string sourceDir, string targetDir)
         {
             if (!Directory.Exists(targetDir))
             {
                 Directory.CreateDirectory(targetDir);
             }
 
-            string[] files = Directory.GetFiles(sourceDir);
-            
-            foreach (string file in files)
+            var files = Directory.GetFiles(sourceDir);
+
+            foreach (var file in files)
             {
-                string fileName = Path.GetFileName(file);
-                string destFile = Path.Combine(targetDir, fileName);
+                var fileName = Path.GetFileName(file);
+                var destFile = Path.Combine(targetDir, fileName);
+                
                 File.Copy(file, destFile);
             }
 
-            string[] subdirectories = Directory.GetDirectories(sourceDir);
-            
-            foreach (string subdir in subdirectories)
+            var subdirectories = Directory.GetDirectories(sourceDir);
+
+            foreach (var subDir in subdirectories)
             {
-                string subDirName = new DirectoryInfo(subdir).Name;
-                string destSubDir = Path.Combine(targetDir, subDirName);
-                
-                CopyUpdate(subdir, destSubDir);
+                var subDirName = new DirectoryInfo(subDir).Name;
+                var destSubDir = Path.Combine(targetDir, subDirName);
+
+                CopyUpdate(subDir, destSubDir);
             }
 
+            return true;
+        }
+
+        private static bool DeleteUpdate(string sourceDir)
+        {
+            var files = Directory.GetFiles(sourceDir);
+
+            foreach (var file in files)
+            {
+                var fileName = Path.GetFileName(file);
+                var destFile = Path.Combine(sourceDir, fileName);
+                
+                File.Delete(destFile);
+            }
+
+            var subdirectories = Directory.GetDirectories(sourceDir);
+
+            foreach (var subDir in subdirectories)
+            {
+                var subDirName = new DirectoryInfo(subDir).Name;
+                var destSubDir = Path.Combine(sourceDir, subDirName);
+
+                DeleteUpdate(destSubDir);
+            }
+            
             return true;
         }
     }
