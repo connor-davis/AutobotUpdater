@@ -191,8 +191,6 @@ namespace AutobotUpdater
 
                 CopyUpdate(subDir, destSubDir);
             }
-            
-            Directory.Delete(sourceDir);
 
             return true;
         }
@@ -218,6 +216,8 @@ namespace AutobotUpdater
 
                 DeleteUpdate(destSubDir);
             }
+            
+            Directory.Delete(sourceDir);
             
             return true;
         }
