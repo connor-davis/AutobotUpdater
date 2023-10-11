@@ -191,6 +191,8 @@ namespace AutobotUpdater
 
                 CopyUpdate(subDir, destSubDir);
             }
+            
+            Directory.Delete(sourceDir);
 
             return true;
         }
