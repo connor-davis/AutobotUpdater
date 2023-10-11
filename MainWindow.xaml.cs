@@ -109,7 +109,7 @@ namespace AutobotUpdater
 
             try
             {
-                ZipFile.ExtractToDirectory("Autobot.zip", "temp");
+                ZipFile.ExtractToDirectory("Autobot.zip", "temp", true);
                 
                 Thread.Sleep(1000);
 
@@ -117,8 +117,10 @@ namespace AutobotUpdater
                 {
                     DownloadStatus.Text = "Copying Update.";
 
-                    if (CopyUpdate($"{DirectoryPath!}/temp", $"{DirectoryPath!}"))
+                    if (CopyUpdate($"./temp", $"."))
                     {
+                        if (Directory.Exists("./temp")) Directory.Delete("./temp");
+                        
                         DownloadStatus.Text = "Installation Complete.";
 
                         Thread.Sleep(1000);
@@ -156,26 +158,29 @@ namespace AutobotUpdater
             }
         }
 
-        private bool CopyUpdate(string source, string target)
+        private bool CopyUpdate(string sourceDir, string targetDir)
         {
-            if (!Directory.Exists(source)) return false;
+            if (!Directory.Exists(targetDir))
+            {
+                Directory.CreateDirectory(targetDir);
+            }
 
-            string[] files = Directory.GetFiles(source);
-
+            string[] files = Directory.GetFiles(sourceDir);
+            
             foreach (string file in files)
             {
                 string fileName = Path.GetFileName(file);
-                string destFile = Path.Combine(target, fileName);
+                string destFile = Path.Combine(targetDir, fileName);
                 File.Copy(file, destFile);
             }
 
-            string[] subdirectories = Directory.GetDirectories(source);
-
+            string[] subdirectories = Directory.GetDirectories(sourceDir);
+            
             foreach (string subdir in subdirectories)
             {
-                string subDirName = Path.GetFileName(subdir);
-                string destSubDir = Path.Combine(target, subDirName);
-
+                string subDirName = new DirectoryInfo(subdir).Name;
+                string destSubDir = Path.Combine(targetDir, subDirName);
+                
                 CopyUpdate(subdir, destSubDir);
             }
 
