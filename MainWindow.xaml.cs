@@ -116,7 +116,7 @@ namespace AutobotUpdater
                     {
                         if (DeleteUpdate("./temp"))
                         {
-                            if (File.Exists("./Autobotv4.zip")) File.Delete("./Autobotv4.zip");
+                            if (File.Exists("./Autobot.zip")) File.Delete("./Autobot.zip");
 
                             DownloadStatus.Text = "Installation Complete.";
 
