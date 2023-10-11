@@ -116,51 +116,31 @@ namespace AutobotUpdater
                 Dispatcher.Invoke(() =>
                 {
                     DownloadStatus.Text = "Copying Update.";
-                    
-                    var copyStartInfo = new ProcessStartInfo
+
+                    if (CopyUpdate($"{DirectoryPath!}/temp", $"{DirectoryPath!}"))
                     {
-                        FileName = "cmd.exe",
-                        RedirectStandardInput = true,
-                        UseShellExecute = false,
-                        CreateNoWindow = true
-                    };
+                        DownloadStatus.Text = "Installation Complete.";
 
-                    var copyProcess = new Process { StartInfo = copyStartInfo };
+                        Thread.Sleep(1000);
 
-                    copyProcess.Start();
-                    copyProcess.StandardInput.WriteLine(@"
-                        @echo off
-                        setlocal
+                        var startInfo = new ProcessStartInfo
+                        {
+                            FileName = "Autobot.exe",
+                            UseShellExecute = true,
+                            CreateNoWindow = true
+                        };
 
-                        set ""sourceFolder=%CD%\temp""
-                        set ""destinationFolder=%CD%""
+                        Process.Start(startInfo);
 
-                        echo ""%sourceFolder%""
-                        echo ""%destinationFolder%""
-
-                        xcopy ""%sourceFolder%"" ""%destinationFolder%"" /E /I /Y
-
-                        rmdir /s /q ""%sourceFolder%""
-
-                        endlocal
-                    ");
-                    copyProcess.StandardInput.WriteLine("exit");
-                    copyProcess.WaitForExit();
-                    
-                    DownloadStatus.Text = "Installation Complete.";
-                    
-                    Thread.Sleep(1000);
-
-                    var startInfo = new ProcessStartInfo
+                        Environment.Exit(0);
+                    } else
                     {
-                        FileName = "Autobot.exe",
-                        UseShellExecute = true,
-                        CreateNoWindow = true
-                    };
+                        DownloadStatus.Text = "Update Failed. Could not copy update.";
 
-                    Process.Start(startInfo);
+                        Thread.Sleep(2000);
 
-                    Environment.Exit(0);
+                        Environment.Exit(0);
+                    }
                 });
             }
             catch (Exception ex)
@@ -174,6 +154,32 @@ namespace AutobotUpdater
                 
                 Console.WriteLine($"Error: {ex.Message}");
             }
+        }
+
+        private bool CopyUpdate(string source, string target)
+        {
+            if (!Directory.Exists(source)) return false;
+
+            string[] files = Directory.GetFiles(source);
+
+            foreach (string file in files)
+            {
+                string fileName = Path.GetFileName(file);
+                string destFile = Path.Combine(target, fileName);
+                File.Copy(file, destFile);
+            }
+
+            string[] subdirectories = Directory.GetDirectories(source);
+
+            foreach (string subdir in subdirectories)
+            {
+                string subDirName = Path.GetFileName(subdir);
+                string destSubDir = Path.Combine(target, subDirName);
+
+                CopyUpdate(subdir, destSubDir);
+            }
+
+            return true;
         }
     }
 }
