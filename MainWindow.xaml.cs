@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Net.Http;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -17,6 +18,8 @@ namespace AutobotUpdater
     public partial class MainWindow
     {
         private static MainWindow? _instance;
+        private static readonly string? DirectoryPath =
+            Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
 
         public MainWindow()
         {
@@ -45,7 +48,7 @@ namespace AutobotUpdater
             try
             {
                 await using var fileStream =
-                    new FileStream("Autobot.zip", FileMode.Create, FileAccess.Write, FileShare.None);
+                    new FileStream($"{DirectoryPath}\\Autobot.zip", FileMode.Create, FileAccess.Write, FileShare.None);
 
                 // Send an HTTP GET request to the URL and get the response
                 using var response = await httpClient.GetAsync(downloadUrl, HttpCompletionOption.ResponseHeadersRead);
@@ -104,7 +107,7 @@ namespace AutobotUpdater
 
             try
             {
-                ZipFile.ExtractToDirectory("Autobot.zip", "temp", true);
+                ZipFile.ExtractToDirectory($"{DirectoryPath}\\Autobot.zip", $"{DirectoryPath}\\temp", true);
 
                 Thread.Sleep(1000);
 
@@ -112,11 +115,11 @@ namespace AutobotUpdater
                 {
                     DownloadStatus.Text = "Copying Update.";
 
-                    if (CopyUpdate($"./temp", $"."))
+                    if (CopyUpdate($"{DirectoryPath}\\temp", $"{DirectoryPath}"))
                     {
-                        if (DeleteUpdate("./temp"))
+                        if (DeleteUpdate($"{DirectoryPath}\\temp"))
                         {
-                            if (File.Exists("./Autobot.zip")) File.Delete("./Autobot.zip");
+                            if (File.Exists($"{DirectoryPath}\\Autobot.zip")) File.Delete($"{DirectoryPath}\\Autobot.zip");
 
                             DownloadStatus.Text = "Installation Complete.";
 
@@ -179,14 +182,21 @@ namespace AutobotUpdater
                 var fileName = Path.GetFileName(file);
                 var destFile = Path.Combine(targetDir, fileName);
 
-                if (File.Exists(destFile))
+                try
                 {
-                    File.Delete(destFile);
-                    File.Copy(file, destFile);
+                    if (File.Exists(destFile))
+                    {
+                        File.Delete(destFile);
+                        File.Copy(file, destFile);
+                    }
+                    else
+                    {
+                        File.Copy(file, destFile);
+                    }
                 }
-                else
+                catch
                 {
-                    File.Copy(file, destFile);
+                    // ignore
                 }
             }
 
