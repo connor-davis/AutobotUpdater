@@ -178,8 +178,16 @@ namespace AutobotUpdater
             {
                 var fileName = Path.GetFileName(file);
                 var destFile = Path.Combine(targetDir, fileName);
-                
-                File.Copy(file, destFile);
+
+                if (File.Exists(destFile))
+                {
+                    File.Delete(destFile);
+                    File.Copy(file, destFile);
+                }
+                else
+                {
+                    File.Copy(file, destFile);
+                }
             }
 
             var subdirectories = Directory.GetDirectories(sourceDir);
