@@ -39,7 +39,7 @@
                         </Grid.RowDefinitions>
                         
                         <TextBlock x:Name="DownloadStatus" Grid.Row="0" Foreground="#FFFFFFFF" HorizontalAlignment="Center" Text="Downloading Update"/>
-                        <ProgressBar x:Name="DownloadProgressBar" Grid.Row="1" Style="{StaticResource AutobotProgressbar}" Foreground="#FFFFFFFF" Value="10" Background="#FF1C1C1C"/>
+                        <ProgressBar x:Name="DownloadProgressBar" Grid.Row="1" Style="{StaticResource AutobotProgressbar}" Foreground="#FFFFFFFF" Background="#FF1C1C1C"/>
                     </Grid>
                 </Border>
             </Grid>
