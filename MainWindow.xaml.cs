@@ -103,56 +103,34 @@ namespace AutobotUpdater
 
         private void Install()
         {
-            Dispatcher.Invoke(() => { DownloadStatus.Text = "Extracting Update."; });
+            Dispatcher.Invoke(() => { DownloadStatus.Text = "Installing Update."; });
 
             try
             {
-                ZipFile.ExtractToDirectory($"{DirectoryPath}\\Autobot.zip", $"{DirectoryPath}\\temp", true);
+                ZipFile.ExtractToDirectory($"{DirectoryPath}\\Autobot.zip", $"{DirectoryPath}", true);
 
                 Thread.Sleep(1000);
 
                 Dispatcher.Invoke(() =>
                 {
-                    DownloadStatus.Text = "Copying Update.";
+                    DownloadStatus.Text = "Cleaning up.";
 
-                    if (CopyUpdate($"{DirectoryPath}\\temp", $"{DirectoryPath}"))
+                    if (File.Exists($"{DirectoryPath}\\Autobot.zip")) File.Delete($"{DirectoryPath}\\Autobot.zip");
+
+                    DownloadStatus.Text = "Installation Complete.";
+
+                    Thread.Sleep(1000);
+
+                    var startInfo = new ProcessStartInfo
                     {
-                        if (DeleteUpdate($"{DirectoryPath}\\temp"))
-                        {
-                            if (File.Exists($"{DirectoryPath}\\Autobot.zip")) File.Delete($"{DirectoryPath}\\Autobot.zip");
+                        FileName = "Autobot.exe",
+                        UseShellExecute = true,
+                        CreateNoWindow = true
+                    };
 
-                            DownloadStatus.Text = "Installation Complete.";
+                    Process.Start(startInfo);
 
-                            Thread.Sleep(1000);
-
-                            var startInfo = new ProcessStartInfo
-                            {
-                                FileName = "Autobot.exe",
-                                UseShellExecute = true,
-                                CreateNoWindow = true
-                            };
-
-                            Process.Start(startInfo);
-
-                            Environment.Exit(0);
-                        }
-                        else
-                        {
-                            DownloadStatus.Text = "Update Failed. Could not clean up update.";
-
-                            Thread.Sleep(2000);
-
-                            Environment.Exit(0);
-                        }
-                    }
-                    else
-                    {
-                        DownloadStatus.Text = "Update Failed. Could not copy update.";
-
-                        Thread.Sleep(2000);
-
-                        Environment.Exit(0);
-                    }
+                    Environment.Exit(0);
                 });
             }
             catch (Exception ex)
