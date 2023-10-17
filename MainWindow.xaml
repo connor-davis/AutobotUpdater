@@ -29,6 +29,10 @@
 
                 <Border Grid.Row="1" Padding="10">
                     <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="360"></ColumnDefinition>
+                        </Grid.ColumnDefinitions>
+                        
                         <Grid.RowDefinitions>
                             <RowDefinition Height="30"/>
                             <RowDefinition Height="10"/>
