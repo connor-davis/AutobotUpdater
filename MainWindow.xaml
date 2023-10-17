@@ -29,17 +29,19 @@
 
                 <Border Grid.Row="1" Padding="10">
                     <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="360"></ColumnDefinition>
-                        </Grid.ColumnDefinitions>
-                        
                         <Grid.RowDefinitions>
-                            <RowDefinition Height="30"/>
-                            <RowDefinition Height="10"/>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="10" />
+                            <RowDefinition Height="10" />
                         </Grid.RowDefinitions>
-                        
-                        <TextBlock x:Name="DownloadStatus" Grid.Row="0" Foreground="#FFFFFFFF" HorizontalAlignment="Center" Text="Downloading Update"/>
-                        <ProgressBar x:Name="DownloadProgressBar" Grid.Row="1" Style="{StaticResource AutobotProgressbar}" Foreground="#FFFFFFFF" Background="#FF1C1C1C"/>
+
+                        <TextBlock x:Name="DownloadStatus" Grid.Row="0" Foreground="#FFFFFFFF"
+                                   HorizontalAlignment="Center" LineStackingStrategy="MaxHeight" TextWrapping="WrapWithOverflow">
+                            Initializing.
+                        </TextBlock>
+                        <ProgressBar x:Name="DownloadProgressBar" Grid.Row="2"
+                                     Style="{StaticResource AutobotProgressbar}" Foreground="#FFFFFFFF"
+                                     Background="#FF1C1C1C" />
                     </Grid>
                 </Border>
             </Grid>
