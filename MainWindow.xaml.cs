@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Threading;
 using Octokit;
 using FileMode = System.IO.FileMode;
 
@@ -17,9 +18,7 @@ namespace AutobotUpdater
     /// </summary>
     public partial class MainWindow
     {
-        private static MainWindow? _instance;
-        private static readonly string? DirectoryPath =
-            Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+        private static MainWindow _instance;
 
         public MainWindow()
         {
@@ -27,10 +26,12 @@ namespace AutobotUpdater
 
             _instance = this;
 
+            DownloadStatus.Text = "Initializing update.";
+
             new Task(DownloadLatest).Start();
         }
 
-        public static MainWindow? GetInstance()
+        public static MainWindow GetInstance()
         {
             return _instance;
         }
@@ -48,7 +49,9 @@ namespace AutobotUpdater
             try
             {
                 await using var fileStream =
-                    new FileStream($"{DirectoryPath}\\Autobot.zip", FileMode.Create, FileAccess.Write, FileShare.None);
+                    new FileStream($".\\Autobot.zip", FileMode.Create, FileAccess.Write, FileShare.None);
+
+                Dispatcher.Invoke(() => { DownloadStatus.Text = "Downloading update."; });
 
                 // Send an HTTP GET request to the URL and get the response
                 using var response = await httpClient.GetAsync(downloadUrl, HttpCompletionOption.ResponseHeadersRead);
@@ -84,87 +87,120 @@ namespace AutobotUpdater
                     });
                 }
 
-                fileStream.Close();
-
                 Dispatcher.Invoke(() =>
                 {
-                    DownloadStatus.Text = "Download Finished.";
-
-                    Thread.Sleep(1000);
-
-                    new Task(Install).Start();
+                    DownloadStatus.Text = "Download finished.";
+                    DownloadProgressBar.Visibility = Visibility.Collapsed;
                 });
+
+                fileStream.Close();
+                httpClient.Dispose();
+
+                Thread.Sleep(5000);
+
+                new Task(Install).Start();
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                Dispatcher.Invoke(() =>
+                {
+                    DownloadStatus.Text = "Please wait an hour before updating again. You have reached your limit.";
+                    DownloadProgressBar.Visibility = Visibility.Collapsed;
+                });
+
+                Thread.Sleep(2000);
+
+                Environment.Exit(0);
             }
         }
 
         private void Install()
         {
-            Dispatcher.Invoke(() => { DownloadStatus.Text = "Extracting Update."; });
+            Dispatcher.Invoke(() => { DownloadStatus.Text = "Installing update."; });
 
             try
             {
-                ZipFile.ExtractToDirectory($"{DirectoryPath}\\Autobot.zip", $"{DirectoryPath}\\temp", true);
-
-                Thread.Sleep(1000);
-
-                Dispatcher.Invoke(() =>
+                try
                 {
-                    DownloadStatus.Text = "Copying Update.";
-
-                    if (CopyUpdate($"{DirectoryPath}\\temp", $"{DirectoryPath}"))
+                    ZipFile.ExtractToDirectory($".\\Autobot.zip", $".\\temp", true);
+                }
+                catch
+                {
+                    Dispatcher.Invoke(() =>
                     {
-                        if (DeleteUpdate($"{DirectoryPath}\\temp"))
-                        {
-                            if (File.Exists($"{DirectoryPath}\\Autobot.zip")) File.Delete($"{DirectoryPath}\\Autobot.zip");
+                        DownloadStatus.Text = "Failed to extract update.";
+                        DownloadProgressBar.Visibility = Visibility.Collapsed;
 
-                            DownloadStatus.Text = "Installation Complete.";
+                        Environment.Exit(0);
+                    });
+                }
 
-                            Thread.Sleep(1000);
+                Dispatcher.Invoke(() => { DownloadStatus.Text = "Cleaning up."; });
 
-                            var startInfo = new ProcessStartInfo
-                            {
-                                FileName = "Autobot.exe",
-                                UseShellExecute = true,
-                                CreateNoWindow = true
-                            };
-
-                            Process.Start(startInfo);
-
-                            Environment.Exit(0);
-                        }
-                        else
-                        {
-                            DownloadStatus.Text = "Update Failed. Could not clean up update.";
-
-                            Thread.Sleep(2000);
-
-                            Environment.Exit(0);
-                        }
-                    }
-                    else
+                if (CopyUpdate($".\\temp", $"."))
+                {
+                    if (DeleteUpdate($".\\temp"))
                     {
-                        DownloadStatus.Text = "Update Failed. Could not copy update.";
+                        Thread.Sleep(2000);
+
+                        if (File.Exists($".\\Autobot.zip")) File.Delete($".\\Autobot.zip");
+
+                        Dispatcher.Invoke(() => { DownloadStatus.Text = "Installation complete."; });
 
                         Thread.Sleep(2000);
 
-                        Environment.Exit(0);
+                        Dispatcher.Invoke(() => { DownloadStatus.Text = "Launching Autobot."; });
+
+                        Thread.Sleep(2000);
+
+                        var startInfo = new ProcessStartInfo
+                        {
+                            FileName = ".\\Autobot.exe",
+                            UseShellExecute = true,
+                            CreateNoWindow = true
+                        };
+
+                        Process.Start(startInfo);
+
+                        Dispatcher.Invoke(() => { Environment.Exit(0); });
                     }
-                });
+                    else
+                    {
+                        Dispatcher.Invoke(() =>
+                        {
+                            DownloadStatus.Text = "Failed to delete update.";
+                            DownloadProgressBar.Visibility = Visibility.Collapsed;
+                        });
+
+                        Thread.Sleep(2000);
+
+                        Dispatcher.Invoke(() => { Environment.Exit(0); });
+                    }
+                }
+                else
+                {
+                    Dispatcher.Invoke(() =>
+                    {
+                        DownloadStatus.Text = "Failed to copy update.";
+                        DownloadProgressBar.Visibility = Visibility.Collapsed;
+                    });
+
+                    Thread.Sleep(2000);
+
+                    Dispatcher.Invoke(() => { Environment.Exit(0); });
+                }
             }
             catch (Exception ex)
             {
                 Dispatcher.Invoke(() =>
                 {
-                    Width = 1920;
                     DownloadStatus.Text = ex.Message;
                     DownloadProgressBar.Visibility = Visibility.Collapsed;
-                });
 
-                Console.WriteLine($"Error: {ex.Message}");
+                    Thread.Sleep(2000);
+
+                    Console.WriteLine($"Error: {ex.Message}");
+                });
             }
         }
 
@@ -221,7 +257,7 @@ namespace AutobotUpdater
             {
                 var fileName = Path.GetFileName(file);
                 var destFile = Path.Combine(sourceDir, fileName);
-                
+
                 File.Delete(destFile);
             }
 
@@ -234,9 +270,9 @@ namespace AutobotUpdater
 
                 DeleteUpdate(destSubDir);
             }
-            
+
             Directory.Delete(sourceDir);
-            
+
             return true;
         }
     }
